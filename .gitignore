@@ -132,3 +132,4 @@ Pipfile
 Pipfile.lock
 static/
 media/
+.vscode/
