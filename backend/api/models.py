@@ -2,6 +2,11 @@ from django.contrib.gis.db import models
 
 
 class Property(models.Model):
+    class SaleTypes(models.TextChoices):
+        FOR_SALE = "for_sale", "For sale"
+        TO_RENT = "to_rent", "To rent"
+
+    sale_type = models.CharField(max_length=8, choices=SaleTypes.choices, null=True)
     url = models.URLField(null=True)
     thumbnail = models.URLField(null=True)
     title = models.CharField(max_length=50, null=True)
