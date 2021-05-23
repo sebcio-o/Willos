@@ -1,5 +1,3 @@
-from datetime import time
-
 import requests
 from django.contrib.gis.geos import Polygon
 from django.utils import timezone
