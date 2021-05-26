@@ -110,7 +110,7 @@ class PropertyViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             .json()[0]
             .get("geotext")
         )
-        if not "POLYGON" in poly:
+        if "POLYGON" not in poly:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         query = Property.objects.filter(cordinates__intersects=poly)
