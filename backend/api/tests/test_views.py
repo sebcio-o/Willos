@@ -10,7 +10,7 @@ from model_bakery import baker
 class TestPropertyView:
     def test_search_by_address(self, client):
         data = requests.get(
-            f"https://nominatim.openstreetmap.org/search?q=London"
+            "https://nominatim.openstreetmap.org/search?q=London"
             "&format=json&country=United Kingdom&polygon_geojson=1&limit=1"
         ).json()[0]
         baker.make(
