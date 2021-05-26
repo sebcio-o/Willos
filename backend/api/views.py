@@ -1,6 +1,8 @@
 import requests
-from django.contrib.gis.geos import Polygon
 from django.utils import timezone
+from drf_yasg import openapi
+from drf_yasg.inspectors import SwaggerAutoSchema
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.response import Response
 
@@ -8,30 +10,109 @@ from .models import Property
 from .serializers import PropertySerializer
 
 
+class PropertyViewSetSchema(SwaggerAutoSchema):
+    def add_manual_parameters(self, parameters):
+        return [
+            openapi.Parameter(
+                "address",
+                openapi.IN_QUERY,
+                required=True,
+                type=openapi.TYPE_STRING,
+            ),
+            openapi.Parameter(
+                "sale_type",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                enum=Property.SaleTypes.values,
+            ),
+            openapi.Parameter(
+                "property_type",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+            ),
+            openapi.Parameter(
+                "price_min",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
+                "price_max",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
+                "bedrooms_min",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
+                "bedrooms_max",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
+                "bathrooms_min",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
+                "bathrooms_max",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_INTEGER,
+            ),
+            openapi.Parameter(
+                "days_old",
+                openapi.IN_QUERY,
+                type=openapi.TYPE_STRING,
+                enum=["1d", "3d", "7d", "14d", "30d"],
+            ),
+        ]
+
+    def get_response_serializers(self):
+        return {
+            "200": openapi.Response(
+                "Get properties and cordinates from address",
+                openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "properties": openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=self.serializer_to_schema(PropertySerializer({})),
+                        ),
+                        "cordinates": openapi.Schema(
+                            "WKT - POLYGON",
+                            type=openapi.TYPE_STRING,
+                        ),
+                    },
+                ),
+            ),
+        }
+
+
 class PropertyViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
 
+    @swagger_auto_schema(auto_schema=PropertyViewSetSchema)
     def list(self, request):
+
+        """Use this endpoint to retrieve properties from provided address in UK"""
 
         address = request.query_params.get("address")
         if not address:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        geojson = (
+        poly = (
             requests.get(
                 f"https://nominatim.openstreetmap.org/search?q={address}"
-                "&format=json&country=United Kingdom&polygon_geojson=1&limit=1"
+                "&format=json&country=United Kingdom&polygon_text=1&limit=1"
             )
             .json()[0]
-            .get("geojson")
+            .get("geotext")
         )
-
-        if geojson and "Polygon" in geojson.get("type"):
-            bbox = geojson.get("coordinates")
-        else:
+        if not "POLYGON" in poly:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        poly = Polygon(tuple((x, y) for x, y in bbox[0]))
+
         query = Property.objects.filter(cordinates__intersects=poly)
 
         sale_type = request.query_params.get("sale_type")
@@ -91,5 +172,5 @@ class PropertyViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
             query = query.filter(date__lt=date)
 
         serializer = PropertySerializer(query, many=True)
-        ctx = {"properties": serializer.data, "cordinates": bbox}
+        ctx = {"properties": serializer.data, "cordinates": poly}
         return Response(ctx, status=status.HTTP_200_OK)
