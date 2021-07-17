@@ -1,8 +1,9 @@
-import pytest
 import requests
 from django.contrib.gis.geos import Point
 from django.urls import reverse
 from django.utils import timezone
+
+import pytest
 from model_bakery import baker
 
 

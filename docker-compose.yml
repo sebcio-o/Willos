@@ -2,6 +2,7 @@ version: "3.8"
 services:
   backend:
     build: backend
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/backend
       - static_volume:/backend/static
@@ -11,6 +12,24 @@ services:
       - .env
     depends_on:
       - db
+      - rabbitmq
+  celery:
+    build: backend
+    command: celery -A backend worker -l INFO
+    volumes:
+      - ./backend:/backend
+      - static_volume:/backend/static
+    env_file:
+      - .env
+    depends_on:
+      - backend
+      - rabbitmq
+  rabbitmq:
+    image: "rabbitmq:3.8-alpine"
+    ports:
+      - 5672:5672
+    env_file:
+      - .env
   db:
     image: "postgis/postgis:13-master"
     volumes:
