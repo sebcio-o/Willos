@@ -1,5 +1,6 @@
 import requests
 from django.utils import timezone
+
 from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema
 from drf_yasg.utils import swagger_auto_schema
@@ -14,10 +15,7 @@ class PropertyViewSetSchema(SwaggerAutoSchema):
     def add_manual_parameters(self, parameters):
         return [
             openapi.Parameter(
-                "address",
-                openapi.IN_QUERY,
-                required=True,
-                type=openapi.TYPE_STRING,
+                "address", openapi.IN_QUERY, required=True, type=openapi.TYPE_STRING
             ),
             openapi.Parameter(
                 "sale_type",
@@ -26,39 +24,21 @@ class PropertyViewSetSchema(SwaggerAutoSchema):
                 enum=Property.SaleTypes.values,
             ),
             openapi.Parameter(
-                "property_type",
-                openapi.IN_QUERY,
-                type=openapi.TYPE_STRING,
+                "property_type", openapi.IN_QUERY, type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter("price_min", openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
+            openapi.Parameter("price_max", openapi.IN_QUERY, type=openapi.TYPE_INTEGER),
+            openapi.Parameter(
+                "bedrooms_min", openapi.IN_QUERY, type=openapi.TYPE_INTEGER
             ),
             openapi.Parameter(
-                "price_min",
-                openapi.IN_QUERY,
-                type=openapi.TYPE_INTEGER,
+                "bedrooms_max", openapi.IN_QUERY, type=openapi.TYPE_INTEGER
             ),
             openapi.Parameter(
-                "price_max",
-                openapi.IN_QUERY,
-                type=openapi.TYPE_INTEGER,
+                "bathrooms_min", openapi.IN_QUERY, type=openapi.TYPE_INTEGER
             ),
             openapi.Parameter(
-                "bedrooms_min",
-                openapi.IN_QUERY,
-                type=openapi.TYPE_INTEGER,
-            ),
-            openapi.Parameter(
-                "bedrooms_max",
-                openapi.IN_QUERY,
-                type=openapi.TYPE_INTEGER,
-            ),
-            openapi.Parameter(
-                "bathrooms_min",
-                openapi.IN_QUERY,
-                type=openapi.TYPE_INTEGER,
-            ),
-            openapi.Parameter(
-                "bathrooms_max",
-                openapi.IN_QUERY,
-                type=openapi.TYPE_INTEGER,
+                "bathrooms_max", openapi.IN_QUERY, type=openapi.TYPE_INTEGER
             ),
             openapi.Parameter(
                 "days_old",
@@ -80,12 +60,11 @@ class PropertyViewSetSchema(SwaggerAutoSchema):
                             items=self.serializer_to_schema(PropertySerializer({})),
                         ),
                         "cordinates": openapi.Schema(
-                            "WKT - POLYGON",
-                            type=openapi.TYPE_STRING,
+                            "WKT - POLYGON", type=openapi.TYPE_STRING
                         ),
                     },
                 ),
-            ),
+            )
         }
 
 

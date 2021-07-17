@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+<div id="fb-root"></div>
+<script crossorigin="anonymous" src="https://connect.facebook.net/pl_PL/sdk.js#xfbml=1&version=v11.0&appId=640263967374936&autoLogAppEvents=1" nonce="G11GO01P"></script>
+<div class="fb-login-button" data-width="" data-size="medium" data-button-type="login_with" data-layout="default" data-auto-logout-link="false" data-use-continue-as="false"></div>
+    
+<script defer>
+    FB.login(function(response){
+        const user_id = response.authResponse.userID
+        const token = response.authResponse.accessToken
+        
+        console.log(user_id, token);
+        
+        fetch("http://localhost:8000/api/users/token/",{
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "auth_type": "socials",
+                "fb_token": token,
+            })
+        }).then((r) => r.json()).then(r=>console.log(r))
+    });
+</script>
+</body> 
+</html>
