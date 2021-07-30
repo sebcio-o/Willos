@@ -54,9 +54,6 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={
-                "verbose_name": "Property",
-                "verbose_name_plural": "Properties",
-            },
-        ),
+            options={"verbose_name": "Property", "verbose_name_plural": "Properties"},
+        )
     ]

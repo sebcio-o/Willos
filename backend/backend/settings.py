@@ -1,8 +1,6 @@
 import os
+from datetime import timedelta
 from pathlib import Path
-
-import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -14,6 +12,7 @@ ALLOWED_HOSTS = [
     host.strip() for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host
 ]
 
+DOMAIN = "Willos"
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -27,6 +26,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "api.apps.ApiConfig",
+    "users.apps.UsersConfig",
 ]
 
 MIDDLEWARE = [
@@ -45,7 +45,7 @@ ROOT_URLCONF = "backend.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": ["templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -75,6 +75,9 @@ DATABASES = {
 }
 
 
+AUTH_USER_MODEL = "users.User"
+AUTHENTICATION_BACKENDS = ["users.backends.AuthBackend"]
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
@@ -87,7 +90,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/London"
 
 USE_I18N = True
 
@@ -95,6 +98,13 @@ USE_L10N = True
 
 USE_TZ = True
 
+RABBITMQ_DEFAULT_USER = os.environ.get("RABBITMQ_DEFAULT_USER")
+RABBITMQ_DEFAULT_PASS = os.environ.get("RABBITMQ_DEFAULT_PASS")
+
+CELERY_TIMEZONE = "Europe/London"
+CELERY_BROKER_URL = (
+    f"amqp://{RABBITMQ_DEFAULT_USER}:{RABBITMQ_DEFAULT_PASS}@rabbitmq:5672"
+)
 
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL)
@@ -107,10 +117,8 @@ REST_FRAMEWORK = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-sentry_sdk.init(
-    dsn=os.environ.get("SENTRY_DSN"),
-    integrations=[DjangoIntegration()],
-    traces_sample_rate=1.0,
-    send_default_pii=True,
-)
+TOTP_INTERVAL = 120
+
+FACEBOOK_ACCESS_TOKEN = os.environ.get("FACEBOOK_ACCESS_TOKEN")
