@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import EmailValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from pyotp import random_base32
 
 
 class User(AbstractUser):
@@ -19,7 +20,7 @@ class User(AbstractUser):
     is_industry_professional = models.BooleanField(default=False)
     is_2fa_enabled = models.BooleanField(default=False)
 
-    totp_secret = models.CharField(max_length=32, null=True, blank=True)
+    totp_secret = models.CharField(max_length=32, default=random_base32())
 
     fb_user_id = models.CharField(max_length=100)
     google_user_id = models.CharField(max_length=100)

@@ -17,7 +17,7 @@ class AuthBackend(ModelBackend):
                 return user
 
     def _authenticate_with_socials(self, request):
-        if fb_token := request.POST.get("fb_token"):
+        if fb_token := request.data.get("fb_token"):
             credentials = {"fb_user_id": get_fb_user_id(fb_token)}
         else:
             return
@@ -27,9 +27,14 @@ class AuthBackend(ModelBackend):
             return
 
     def authenticate(self, request, **kwargs):
-        if request.POST.get("auth_type") == "socials":
-            return self._authenticate_with_socials(request)
-        elif request.POST.get("auth_type") == "email":
+        if not hasattr(request, "data"):
             email = request.POST.get("username")
             password = request.POST.get("password")
+            return self._authenticate_with_email(request, email, password)
+
+        if request.data.get("auth_type") == "socials":
+            return self._authenticate_with_socials(request)
+        elif request.data.get("auth_type") == "email":
+            email = request.data.get("email")
+            password = request.data.get("password")
             return self._authenticate_with_email(request, email, password)

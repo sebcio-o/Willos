@@ -1,8 +1,9 @@
 from django.conf import settings
 
 import pyotp
-from rest_framework import serializers
-from rest_framework.exceptions import ParseError
+from requests.models import Response
+from rest_framework import serializers, status
+from rest_framework.exceptions import ErrorDetail, ParseError
 from rest_framework.validators import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
