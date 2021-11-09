@@ -2,9 +2,15 @@ from django.urls import path
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .views import (CustomTokenObtainPairView, EmailLookupView,
-                    SendVerificationMailView, TwoFATokenObtainPairView,
-                    TwoFAView, UserView, VerifyEmailView)
+from .views import (
+    CustomTokenObtainPairView,
+    EmailLookupView,
+    SendVerificationMailView,
+    TwoFATokenObtainPairView,
+    TwoFAView,
+    UserView,
+    VerifyEmailView,
+)
 
 urlpatterns = [
     path("", UserView.as_view(), name="user"),
