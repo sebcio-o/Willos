@@ -1,18 +1,15 @@
-from rest_framework.test import APIClient
-from django.contrib.auth import get_user_model
-
-from rest_framework_simplejwt.tokens import RefreshToken
-
-
+import pyotp
+import pytest
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-import pyotp
+from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from model_bakery import baker
 
 from ..utils import Token
-
-import pytest
-from model_bakery import baker
 
 
 @pytest.mark.django_db
@@ -149,9 +146,7 @@ class TestPropertyView:
 
         self.client.credentials(HTTP_USER_AGENT="Linux")
         response = self.client.post(
-            "http://localhost:8000/api/users/token/",
-            body,
-            format="json",
+            "http://localhost:8000/api/users/token/", body, format="json"
         )
 
         assert response.data["detail"] == "Please check email for code"
@@ -160,9 +155,7 @@ class TestPropertyView:
             user.totp_secret, interval=settings.TOTP_INTERVAL
         ).now()
         response = self.client.post(
-            "http://localhost:8000/api/users/token/code/",
-            body,
-            format="json",
+            "http://localhost:8000/api/users/token/code/", body, format="json"
         )
 
         assert len(response.data) == 2
@@ -182,9 +175,7 @@ class TestPropertyView:
 
         self.client.credentials(HTTP_USER_AGENT="Linux")
         response = self.client.post(
-            "http://localhost:8000/api/users/token/",
-            body,
-            format="json",
+            "http://localhost:8000/api/users/token/", body, format="json"
         )
 
         assert response.data["detail"] == "Please check email for code"
@@ -193,9 +184,7 @@ class TestPropertyView:
             fb_user.totp_secret, interval=settings.TOTP_INTERVAL
         ).now()
         response = self.client.post(
-            "http://localhost:8000/api/users/token/code/",
-            body,
-            format="json",
+            "http://localhost:8000/api/users/token/code/", body, format="json"
         )
         assert len(response.data) == 2
 

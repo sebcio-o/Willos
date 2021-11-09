@@ -135,9 +135,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication"
     ]
 }
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=99),
-}
+SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(days=99)}
 CORS_ORIGIN_ALLOW_ALL = True
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

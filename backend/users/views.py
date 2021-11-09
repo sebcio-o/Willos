@@ -3,8 +3,6 @@ from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-
-from .helpers import GetSerializerBasedOnAuthType
 from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema
 from drf_yasg.utils import swagger_auto_schema
@@ -13,15 +11,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
+from .helpers import GetSerializerBasedOnAuthType
 from .models import CustomUser
-from .serializers import (
-    EmailRegisterUserSerializer,
-    EmailTokenObtainPairSerializer,
-    EmailTwoFATokenObtainPairSerializer,
-    SocialsRegisterUserSerializer,
-    SocialsTokenObtainPairSerializer,
-    SocialsTwoFATokenObtainPairSerializer,
-)
+from .serializers import (EmailRegisterUserSerializer,
+                          EmailTokenObtainPairSerializer,
+                          EmailTwoFATokenObtainPairSerializer,
+                          SocialsRegisterUserSerializer,
+                          SocialsTokenObtainPairSerializer,
+                          SocialsTwoFATokenObtainPairSerializer)
 from .tasks import send_verification_mail
 from .utils import Token
 

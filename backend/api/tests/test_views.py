@@ -1,9 +1,9 @@
+import pytest
 import requests
 from django.contrib.gis.geos import Point
 from django.urls import reverse
 from django.utils import timezone
 
-import pytest
 from api.models import Property
 from model_bakery import baker
 
@@ -16,8 +16,7 @@ class TestPropertyView:
             "&format=json&country=United Kingdom&polygon_geojson=1&limit=1"
         ).json()[0]
         d = baker.make(
-            "api.Property",
-            cordinates=Point(float(data["lon"]), float(data["lat"])),
+            "api.Property", cordinates=Point(float(data["lon"]), float(data["lat"]))
         )
         response = client.get(reverse("properties-list"), {"address": "London"})
         assert response.status_code == 200

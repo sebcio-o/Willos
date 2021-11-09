@@ -1,5 +1,5 @@
 from django.contrib import admin
 
-from .models import CustomUser, AuthenticationData
+from .models import AuthenticationData, CustomUser
 
 admin.site.register([CustomUser, AuthenticationData])

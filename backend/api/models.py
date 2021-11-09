@@ -1,7 +1,9 @@
-from django.contrib.gis.db import models
 from datetime import datetime
-from django.utils import timezone
+
+from django.contrib.gis.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.utils import timezone
+
 from backend.storage_backends import PublicMediaStorage
 
 

@@ -1,7 +1,6 @@
 import pytest
-
-from rest_framework.test import APIClient
 from django.contrib.auth import get_user_model
+from rest_framework.test import APIClient
 
 TEXT_FB_USER_TOKEN = "EAAJGURJWflgBAE7dTz7UHP0vsICsj6o77GIlVYSYZBNeZCFTcguuwbwXHByUvFL6ZCK17LospVjZAjXksZCcXkTXii43QSC02OfjQWLuJ0qdYvQLszHZCSa8hz5IUo2oejcf0bm9QR8eert7MvLavpypkNrS9bL6FEwpKYgjPG672RDIiyFZCMVl3fSV0ZBMGZAqXCprSi9EvXj5kTZCbL2GnD"
 user_model = get_user_model()
@@ -10,9 +9,7 @@ user_model = get_user_model()
 @pytest.fixture
 def user():
     user = user_model.objects.create_user(
-        username="zbychu",
-        email="testq@gmail.com",
-        password="MoiDrodzyRekturerzy123",
+        username="zbychu", email="testq@gmail.com", password="MoiDrodzyRekturerzy123"
     )
     return user
 

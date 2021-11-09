@@ -1,11 +1,10 @@
+import pyotp
+from celery import shared_task
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-
-import pyotp
-from celery import shared_task
 
 from .models import CustomUser
 from .utils import Token

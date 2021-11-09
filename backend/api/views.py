@@ -1,21 +1,18 @@
 import requests
 from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
-
+from django.utils.decorators import method_decorator
 from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
-from rest_framework.response import Response
 from rest_framework.exceptions import ParseError
-
-from .models import Property
-from .serializers import PropertySerializer
+from rest_framework.response import Response
 
 from .helpers import set_user_agent
-
-from django.shortcuts import get_object_or_404
+from .models import Property
+from .serializers import PropertySerializer
 
 
 class PropertyViewSetSchemaCreate(SwaggerAutoSchema):
@@ -29,10 +26,7 @@ class PropertyViewSetSchemaCreate(SwaggerAutoSchema):
                 default="Bearer <TOKEN>",
             ),
             openapi.Parameter(
-                "Data",
-                openapi.IN_QUERY,
-                required=True,
-                type=openapi.TYPE_OBJECT,
+                "Data", openapi.IN_QUERY, required=True, type=openapi.TYPE_OBJECT
             ),
         ]
 
@@ -46,7 +40,7 @@ class PropertyViewSetSchemaDestroy(SwaggerAutoSchema):
                 required=True,
                 type=openapi.TYPE_STRING,
                 default="Bearer <TOKEN>",
-            ),
+            )
         ]
 
 

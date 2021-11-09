@@ -1,6 +1,5 @@
-from django.conf import settings
-
 import pyotp
+from django.conf import settings
 from requests.models import Response
 from rest_framework import serializers, status
 from rest_framework.exceptions import ErrorDetail, ParseError
