@@ -2,6 +2,7 @@ from django.contrib.gis.db import models
 from datetime import datetime
 from django.utils import timezone
 from django.core.validators import MaxValueValidator, MinValueValidator
+from backend.storage_backends import PublicMediaStorage
 
 
 class RealEstateAgent(models.Model):
@@ -18,7 +19,7 @@ class Property(models.Model):
         TO_RENT = "to_rent", "To rent"
 
     sale_type = models.CharField(max_length=8, choices=SaleTypes.choices)
-    thumbnail = models.ImageField()
+    thumbnail = models.ImageField(storage=PublicMediaStorage)
     title = models.CharField(max_length=50)
     address = models.CharField(max_length=100)
     price = models.IntegerField(
