@@ -4,16 +4,16 @@ from django.utils.decorators import method_decorator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 
+from .helpers import GetSerializerBasedOnAuthType
 from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
-from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import User
+from .models import CustomUser
 from .serializers import (
     EmailRegisterUserSerializer,
     EmailTokenObtainPairSerializer,
@@ -26,7 +26,7 @@ from .tasks import send_verification_mail
 from .utils import Token
 
 
-class UserViewPOSTSchema(SwaggerAutoSchema):
+class UserViewPostSchema(SwaggerAutoSchema):
     """
     Register user with Email or Facebook
     """
@@ -87,7 +87,7 @@ class UserViewPOSTSchema(SwaggerAutoSchema):
         }
 
 
-class UserViewGETSchema(SwaggerAutoSchema):
+class UserViewGetSchema(SwaggerAutoSchema):
     def add_manual_parameters(self, parameters):
         return [
             openapi.Parameter(
@@ -121,27 +121,23 @@ class UserViewGETSchema(SwaggerAutoSchema):
         }
 
 
-class UserView(generics.CreateAPIView):
-    models = User
+class UserView(GetSerializerBasedOnAuthType, generics.CreateAPIView):
+    models = CustomUser
+    auth_type_serializers = {
+        "email": EmailRegisterUserSerializer,
+        "socials": SocialsRegisterUserSerializer,
+    }
 
     def get_serializer_class(self):
-
         if self.request.method == "GET":
             return EmailRegisterUserSerializer
+        return super().get_serializer_class()
 
-        auth_type = self.request.data.get("auth_type")
-        if not auth_type:
-            raise ParseError("Please provide auth_type")
-        elif auth_type == "email":
-            return EmailRegisterUserSerializer
-        elif auth_type == "socials":
-            return SocialsRegisterUserSerializer
-
-    @swagger_auto_schema(auto_schema=UserViewPOSTSchema)
+    @swagger_auto_schema(auto_schema=UserViewPostSchema)
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
-    @swagger_auto_schema(auto_schema=UserViewGETSchema)
+    @swagger_auto_schema(auto_schema=UserViewGetSchema)
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
@@ -211,19 +207,15 @@ class CustomTokenObtainPairViewSchema(SwaggerAutoSchema):
         }
 
 
-class CustomTokenObtainPairView(TokenObtainPairView):
+class CustomTokenObtainPairView(GetSerializerBasedOnAuthType, TokenObtainPairView):
+    auth_type_serializers = {
+        "email": EmailTokenObtainPairSerializer,
+        "socials": SocialsTokenObtainPairSerializer,
+    }
+
     @swagger_auto_schema(auto_schema=CustomTokenObtainPairViewSchema)
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
-
-    def get_serializer_class(self):
-        auth_type = self.request.data.get("auth_type")
-        if not auth_type:
-            raise ParseError("Please provide auth_type")
-        elif auth_type == "email":
-            return EmailTokenObtainPairSerializer
-        elif auth_type == "socials":
-            return SocialsTokenObtainPairSerializer
 
 
 class EmailLookupViewSchema(SwaggerAutoSchema):
@@ -259,7 +251,7 @@ class EmailLookupView(APIView):
     def get(self, request):
         email = request.query_params.get("email")
         if email:
-            if User.objects.filter(email=email):
+            if CustomUser.objects.filter(email=email):
                 return Response(status=status.HTTP_200_OK)
             return Response(
                 {"detail": "Email doesn't exists"}, status.HTTP_404_NOT_FOUND
@@ -292,7 +284,7 @@ class SendVerificationMailView(APIView):
     @swagger_auto_schema(auto_schema=SendVerificationMailViewSchema)
     def post(self, request):
         if email := request.data.get("email"):
-            user = get_object_or_404(User, email=email)
+            user = get_object_or_404(CustomUser, email=email)
             if user.is_email_verified:
                 return Response(
                     {"detail": "Email already verified"},
@@ -319,8 +311,8 @@ class VerifyEmailView(APIView):
     def get(self, request, uid, token):
         try:
             uid = force_str(urlsafe_base64_decode(uid))
-            user = User.objects.get(id=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = CustomUser.objects.get(id=uid)
+        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
             user = None
 
         if user is not None and Token.check_token(user, token):
@@ -389,19 +381,15 @@ class TwoFATokenObtainPairViewSchema(SwaggerAutoSchema):
         }
 
 
-class TwoFATokenObtainPairView(TokenObtainPairView):
+class TwoFATokenObtainPairView(GetSerializerBasedOnAuthType, TokenObtainPairView):
+    auth_type_serializers = {
+        "email": EmailTwoFATokenObtainPairSerializer,
+        "socials": SocialsTwoFATokenObtainPairSerializer,
+    }
+
     @swagger_auto_schema(auto_schema=TwoFATokenObtainPairViewSchema)
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
-
-    def get_serializer_class(self):
-        auth_type = self.request.data.get("auth_type")
-        if not auth_type:
-            raise ParseError("Please provide auth_type")
-        elif auth_type == "email":
-            return EmailTwoFATokenObtainPairSerializer
-        elif auth_type == "socials":
-            return SocialsTwoFATokenObtainPairSerializer
 
 
 class TwoFAViewSchema(SwaggerAutoSchema):

@@ -1,15 +1,15 @@
 from django.contrib.auth.backends import ModelBackend
 
-from .models import User
+from .models import CustomUser
 from .utils import get_fb_user_id, log_authentication_data
 
 
 class AuthBackend(ModelBackend):
     def _authenticate_with_email(self, request, email, password):
         try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            User().set_password(password)
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            CustomUser().set_password(password)
         else:
             if user.check_password(password) and self.user_can_authenticate(user):
                 if not user.is_2fa_enabled:
@@ -22,8 +22,8 @@ class AuthBackend(ModelBackend):
         else:
             return
         try:
-            return User.objects.get(**credentials)
-        except User.DoesNotExist:
+            return CustomUser.objects.get(**credentials)
+        except CustomUser.DoesNotExist:
             return
 
     def authenticate(self, request, **kwargs):

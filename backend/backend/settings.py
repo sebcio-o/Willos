@@ -75,7 +75,6 @@ DATABASES = {
 }
 
 
-AUTH_USER_MODEL = "users.User"
 AUTHENTICATION_BACKENDS = ["users.backends.AuthBackend"]
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -114,7 +113,9 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication"
     ]
 }
-
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=99),
+}
 CORS_ORIGIN_ALLOW_ALL = True
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -122,3 +123,5 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 TOTP_INTERVAL = 120
 
 FACEBOOK_ACCESS_TOKEN = os.environ.get("FACEBOOK_ACCESS_TOKEN")
+
+AUTH_USER_MODEL = "users.CustomUser"

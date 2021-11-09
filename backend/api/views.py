@@ -1,17 +1,56 @@
 import requests
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from django.utils import timezone
 
 from drf_yasg import openapi
 from drf_yasg.inspectors import SwaggerAutoSchema
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import mixins, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.response import Response
+from rest_framework.exceptions import ParseError
 
 from .models import Property
 from .serializers import PropertySerializer
 
+from .helpers import set_user_agent
 
-class PropertyViewSetSchema(SwaggerAutoSchema):
+from django.shortcuts import get_object_or_404
+
+
+class PropertyViewSetSchemaCreate(SwaggerAutoSchema):
+    def add_manual_parameters(self, parameters):
+        return [
+            openapi.Parameter(
+                "Authorization",
+                openapi.IN_HEADER,
+                required=True,
+                type=openapi.TYPE_STRING,
+                default="Bearer <TOKEN>",
+            ),
+            openapi.Parameter(
+                "Data",
+                openapi.IN_QUERY,
+                required=True,
+                type=openapi.TYPE_OBJECT,
+            ),
+        ]
+
+
+class PropertyViewSetSchemaDestroy(SwaggerAutoSchema):
+    def add_manual_parameters(self, parameters):
+        return [
+            openapi.Parameter(
+                "Authorization",
+                openapi.IN_HEADER,
+                required=True,
+                type=openapi.TYPE_STRING,
+                default="Bearer <TOKEN>",
+            ),
+        ]
+
+
+class PropertyViewSetSchemaList(SwaggerAutoSchema):
     def add_manual_parameters(self, parameters):
         return [
             openapi.Parameter(
@@ -68,11 +107,38 @@ class PropertyViewSetSchema(SwaggerAutoSchema):
         }
 
 
-class PropertyViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class PropertyViewSet(viewsets.ModelViewSet):
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
 
-    @swagger_auto_schema(auto_schema=PropertyViewSetSchema)
+    @swagger_auto_schema(auto_schema=PropertyViewSetSchemaCreate)
+    @method_decorator(login_required)
+    def create(self, request, *args, **kwargs):
+        request = set_user_agent(request)
+        return super().create(request, *args, **kwargs)
+
+    @method_decorator(login_required)
+    def update(self, request, *args, **kwargs):
+        request = set_user_agent(request)
+        return super().update(request, *args, **kwargs)
+
+    @method_decorator(login_required)
+    def partial_update(self, request, *args, **kwargs):
+        request = set_user_agent(request)
+        return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(auto_schema=PropertyViewSetSchemaDestroy)
+    @method_decorator(login_required)
+    def destroy(self, request, *args, **kwargs):
+        agent = get_object_or_404(Property, id=kwargs.get("pk")).agent
+        if request.user == agent.customuser_set.first():
+            return super().destroy(request, *args, **kwargs)
+        raise ParseError("User isn't in agency that owns this property")
+
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(auto_schema=PropertyViewSetSchemaList)
     def list(self, request):
 
         """Use this endpoint to retrieve properties from provided address in UK"""
@@ -81,18 +147,20 @@ class PropertyViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
         if not address:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        poly = (
-            requests.get(
-                f"https://nominatim.openstreetmap.org/search?q={address}"
-                "&format=json&country=United Kingdom&polygon_text=1&limit=1"
-            )
-            .json()[0]
-            .get("geotext")
-        )
-        if "POLYGON" not in poly:
+        results = requests.get(
+            f"https://nominatim.openstreetmap.org/search?q={address}"
+            "&format=json&country=United Kingdom&polygon_text=1&limit=3"
+        ).json()
+        is_polygon = False
+        for place in results:
+            geotext = place.get("geotext")
+            if "POLYGON" in geotext:
+                is_polygon = True
+                break
+        if not is_polygon:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        query = Property.objects.filter(cordinates__intersects=poly)
+        query = Property.objects.filter(cordinates__intersects=geotext)
 
         sale_type = request.query_params.get("sale_type")
         if sale_type:
@@ -135,21 +203,21 @@ class PropertyViewSet(mixins.RetrieveModelMixin, viewsets.GenericViewSet):
 
         days_old = request.query_params.get("days_old")
         if days_old == "1d":
-            date = timezone.now() + timezone.timedelta(1)
-            query = query.filter(date__lt=date)
+            date = timezone.now() - timezone.timedelta(days=1)
+            query = query.filter(date__gt=date)
         elif days_old == "3d":
-            date = timezone.now() + timezone.timedelta(3)
-            query = query.filter(date__lt=date)
+            date = timezone.now() - timezone.timedelta(days=3)
+            query = query.filter(date__gt=date)
         elif days_old == "7d":
-            date = timezone.now() + timezone.timedelta(7)
-            query = query.filter(date__lt=date)
+            date = timezone.now() - timezone.timedelta(days=7)
+            query = query.filter(date__gt=date)
         elif days_old == "14d":
-            date = timezone.now() + timezone.timedelta(14)
-            query = query.filter(date__lt=date)
+            date = timezone.now() - timezone.timedelta(days=14)
+            query = query.filter(date__gt=date)
         elif days_old == "30d":
-            date = timezone.now() + timezone.timedelta(30)
-            query = query.filter(date__lt=date)
+            date = timezone.now() - timezone.timedelta(days=30)
+            query = query.filter(date__gt=date)
 
         serializer = PropertySerializer(query, many=True)
-        ctx = {"properties": serializer.data, "cordinates": poly}
+        ctx = {"properties": serializer.data, "cordinates": geotext}
         return Response(ctx, status=status.HTTP_200_OK)

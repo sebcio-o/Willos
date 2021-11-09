@@ -7,13 +7,13 @@ from django.utils.http import urlsafe_base64_encode
 import pyotp
 from celery import shared_task
 
-from .models import User
+from .models import CustomUser
 from .utils import Token
 
 
 @shared_task
 def send_verification_mail(id):
-    user = User.objects.get(id=id)
+    user = CustomUser.objects.get(id=id)
     message = render_to_string(
         "email_verification.html",
         {
@@ -28,7 +28,7 @@ def send_verification_mail(id):
 
 @shared_task
 def send_verification_token(id):
-    user = User.objects.get(id=id)
+    user = CustomUser.objects.get(id=id)
     totp = pyotp.TOTP(user.totp_secret, interval=settings.TOTP_INTERVAL)
     message = render_to_string(
         "2fa_verification.html",

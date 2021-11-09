@@ -37,7 +37,6 @@ class TestPropertyView:
             format="json",
         )
         data = response.json()
-
         assert response.status_code == 201
         assert len(data) == 5
 

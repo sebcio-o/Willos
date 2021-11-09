@@ -2,6 +2,7 @@ version: "3.8"
 services:
   backend:
     build: backend
+    container_name: willos_api
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/backend
@@ -15,6 +16,7 @@ services:
       - rabbitmq
   celery:
     build: backend
+    container_name: willos_celery
     command: celery -A backend worker -l INFO
     volumes:
       - ./backend:/backend
@@ -25,6 +27,7 @@ services:
       - backend
       - rabbitmq
   rabbitmq:
+    container_name: willos_mq
     image: "rabbitmq:3.8-alpine"
     ports:
       - 5672:5672
@@ -32,6 +35,7 @@ services:
       - .env
   db:
     image: "postgis/postgis:13-master"
+    container_name: willos_db
     volumes:
       - willos-pgdata:/var/lib/postgresql/data
     ports:

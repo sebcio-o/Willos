@@ -1,4 +1,15 @@
 from django.contrib.gis.db import models
+from datetime import datetime
+from django.utils import timezone
+from django.core.validators import MaxValueValidator, MinValueValidator
+
+
+class RealEstateAgent(models.Model):
+    name = models.CharField(max_length=256)
+    address = models.CharField(max_length=256)
+    phone_number = models.CharField(max_length=16)
+    descripton = models.TextField()
+    cordinates = models.PointField()
 
 
 class Property(models.Model):
@@ -6,24 +17,28 @@ class Property(models.Model):
         FOR_SALE = "for_sale", "For sale"
         TO_RENT = "to_rent", "To rent"
 
-    sale_type = models.CharField(max_length=8, choices=SaleTypes.choices, null=True)
-    url = models.URLField(null=True)
-    thumbnail = models.URLField(null=True)
-    title = models.CharField(max_length=50, null=True)
-    address = models.CharField(max_length=100, null=True)
-    price = models.IntegerField(null=True)
-    date = models.DateTimeField(null=True)
-    agent_name = models.CharField(max_length=50, null=True)
-    agent_phone = models.CharField(max_length=50, null=True)
-    agent_address = models.CharField(max_length=100, null=True)
-    property_type = models.CharField(max_length=25, null=True)
-    bedrooms = models.IntegerField(null=True)
-    bathrooms = models.IntegerField(null=True)
-    receptionrooms = models.IntegerField(null=True)
-    sqft = models.CharField(max_length=15, null=True)
-    description = models.TextField(null=True)
+    sale_type = models.CharField(max_length=8, choices=SaleTypes.choices)
+    thumbnail = models.ImageField()
+    title = models.CharField(max_length=50)
+    address = models.CharField(max_length=100)
+    price = models.IntegerField(
+        validators=[MinValueValidator(1000), MaxValueValidator(500_000_000)]
+    )
+    date = models.DateTimeField(default=timezone.now)
+    property_type = models.CharField(max_length=25)
+    bedrooms = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(20)]
+    )
+    bathrooms = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(20)]
+    )
+    sqft = models.IntegerField(
+        validators=[MinValueValidator(10), MaxValueValidator(10_000)]
+    )
+    description = models.CharField(max_length=1024)
     key_features = models.JSONField(null=True)
-    cordinates = models.PointField(null=True)
+    cordinates = models.PointField()
+    agent = models.ForeignKey(RealEstateAgent, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = "Property"
