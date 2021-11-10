@@ -1,19 +1,19 @@
-from django.conf import settings
-
 import pyotp
-from rest_framework import serializers
-from rest_framework.exceptions import ParseError
+from django.conf import settings
+from requests.models import Response
+from rest_framework import serializers, status
+from rest_framework.exceptions import ErrorDetail, ParseError
 from rest_framework.validators import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import User
+from .models import CustomUser
 from .tasks import send_verification_mail, send_verification_token
 from .utils import get_fb_user_id, log_authentication_data
 
 
 class EmailRegisterUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = CustomUser
         fields = [
             "email",
             "first_name",
@@ -32,7 +32,7 @@ class EmailRegisterUserSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        user = User(**validated_data)
+        user = CustomUser(**validated_data)
         user.set_password(validated_data.get("password"))
         user.save()
         send_verification_mail.delay(user.id)
@@ -44,7 +44,7 @@ class SocialsRegisterUserSerializer(serializers.ModelSerializer):
     fb_token = serializers.CharField(required=False)
 
     class Meta:
-        model = User
+        model = CustomUser
         fields = [
             "email",
             "first_name",
@@ -68,7 +68,7 @@ class SocialsRegisterUserSerializer(serializers.ModelSerializer):
         else:
             raise ParseError("Fb,google or linkedin token should be provided")
 
-        user = User(**validated_data)
+        user = CustomUser(**validated_data)
         user.save()
         send_verification_mail.delay(user.id)
         return user
@@ -76,7 +76,7 @@ class SocialsRegisterUserSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = CustomUser
         fields = [
             "email",
             "first_name",

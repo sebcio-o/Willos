@@ -4,7 +4,8 @@ jobs:
   black-check:
     runs-on: ubuntu-20.04
     steps:
-      - uses: jpetrucciani/black-check@master
+      - uses: actions/checkout@v2
+      - uses: psf/black@stable
   flake8-check:
     runs-on: ubuntu-20.04
     steps:

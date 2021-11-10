@@ -3,7 +3,6 @@ from re import L
 import requests
 from django.conf import settings
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-
 from rest_framework.exceptions import ParseError
 from user_agents import parse
 

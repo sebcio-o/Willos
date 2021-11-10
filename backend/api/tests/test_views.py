@@ -1,9 +1,10 @@
+import pytest
 import requests
 from django.contrib.gis.geos import Point
 from django.urls import reverse
 from django.utils import timezone
 
-import pytest
+from api.models import Property
 from model_bakery import baker
 
 
@@ -14,7 +15,7 @@ class TestPropertyView:
             "https://nominatim.openstreetmap.org/search?q=London"
             "&format=json&country=United Kingdom&polygon_geojson=1&limit=1"
         ).json()[0]
-        baker.make(
+        d = baker.make(
             "api.Property", cordinates=Point(float(data["lon"]), float(data["lat"]))
         )
         response = client.get(reverse("properties-list"), {"address": "London"})
@@ -107,14 +108,15 @@ class TestPropertyView:
         now = timezone.now()
         dates_to_create = [
             now,
-            now + timezone.timedelta(days=2),
-            now + timezone.timedelta(days=4),
-            now + timezone.timedelta(days=8),
-            now + timezone.timedelta(days=15),
-            now + timezone.timedelta(days=31),
+            now - timezone.timedelta(days=2),
+            now - timezone.timedelta(days=6),
+            now - timezone.timedelta(days=13),
+            now - timezone.timedelta(days=29),
+            now - timezone.timedelta(days=100),
         ]
         for date in dates_to_create:
-            baker.make(
+            print(date)
+            d = baker.make(
                 "api.Property", cordinates=Point(-0.1276474, 51.5073219), date=date
             )
 

@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.gis",
+    "storages",
     "drf_yasg",
     "rest_framework",
     "corsheaders",
@@ -75,7 +76,6 @@ DATABASES = {
 }
 
 
-AUTH_USER_MODEL = "users.User"
 AUTHENTICATION_BACKENDS = ["users.backends.AuthBackend"]
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -106,15 +106,35 @@ CELERY_BROKER_URL = (
     f"amqp://{RABBITMQ_DEFAULT_USER}:{RABBITMQ_DEFAULT_PASS}@rabbitmq:5672"
 )
 
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, STATIC_URL)
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
+AWS_REGION_NAME = os.environ.get("AWS_REGION_NAME")
+AWS_S3_OBJECT_PARAMETERS = {"ACL": "public-read", "CacheControl": "max-age=86400"}
+AWS_QUERYSTRING_AUTH = False
+
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_REGION_NAME:
+    STATIC_LOCATION = "static"
+    STATIC_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION_NAME}.amazonaws.com/{STATIC_LOCATION}/"
+    STATICFILES_STORAGE = "backend.storage_backends.StaticStorage"
+
+    PUBLIC_MEDIA_LOCATION = "media"
+    MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION_NAME}.amazonaws.com/{PUBLIC_MEDIA_LOCATION}/"
+    DEFAULT_FILE_STORAGE = "backend.storage_backends.PublicMediaStorage"
+else:
+    STATIC_URL = "/staticfiles/"
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+    MEDIA_URL = "/mediafiles/"
+    MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
+
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication"
     ]
 }
-
+SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(days=99)}
 CORS_ORIGIN_ALLOW_ALL = True
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -122,3 +142,5 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 TOTP_INTERVAL = 120
 
 FACEBOOK_ACCESS_TOKEN = os.environ.get("FACEBOOK_ACCESS_TOKEN")
+
+AUTH_USER_MODEL = "users.CustomUser"
