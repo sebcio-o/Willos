@@ -1,5 +1,4 @@
 import requests
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -9,8 +8,8 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
+from django.contrib.auth.decorators import login_required
 
-from .helpers import set_user_agent
 from .models import Property
 from .serializers import PropertySerializer
 
@@ -108,17 +107,14 @@ class PropertyViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(auto_schema=PropertyViewSetSchemaCreate)
     @method_decorator(login_required)
     def create(self, request, *args, **kwargs):
-        request = set_user_agent(request)
         return super().create(request, *args, **kwargs)
 
     @method_decorator(login_required)
     def update(self, request, *args, **kwargs):
-        request = set_user_agent(request)
         return super().update(request, *args, **kwargs)
 
     @method_decorator(login_required)
     def partial_update(self, request, *args, **kwargs):
-        request = set_user_agent(request)
         return super().partial_update(request, *args, **kwargs)
 
     @swagger_auto_schema(auto_schema=PropertyViewSetSchemaDestroy)
@@ -128,9 +124,6 @@ class PropertyViewSet(viewsets.ModelViewSet):
         if request.user == agent.customuser_set.first():
             return super().destroy(request, *args, **kwargs)
         raise ParseError("User isn't in agency that owns this property")
-
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
 
     @swagger_auto_schema(auto_schema=PropertyViewSetSchemaList)
     def list(self, request):

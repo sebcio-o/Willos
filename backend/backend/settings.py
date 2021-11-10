@@ -109,18 +109,17 @@ CELERY_BROKER_URL = (
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
-AWS_S3_DOMAIN = os.environ.get("AWS_S3_DOMAIN")
-AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
-AWS_S3_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.{AWS_S3_DOMAIN}"
-AWS_DEFAULT_ACL = "public-read"
+AWS_REGION_NAME = os.environ.get("AWS_REGION_NAME")
+AWS_S3_OBJECT_PARAMETERS = {"ACL": "public-read", "CacheControl": "max-age=86400"}
+AWS_QUERYSTRING_AUTH = False
 
-if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_S3_DOMAIN:
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_REGION_NAME:
     STATIC_LOCATION = "static"
-    STATIC_URL = f"https://{AWS_S3_DOMAIN}/{STATIC_LOCATION}/"
+    STATIC_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION_NAME}.amazonaws.com/{STATIC_LOCATION}/"
     STATICFILES_STORAGE = "backend.storage_backends.StaticStorage"
 
     PUBLIC_MEDIA_LOCATION = "media"
-    MEDIA_URL = f"https://{AWS_S3_DOMAIN}/{PUBLIC_MEDIA_LOCATION}/"
+    MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION_NAME}.amazonaws.com/{PUBLIC_MEDIA_LOCATION}/"
     DEFAULT_FILE_STORAGE = "backend.storage_backends.PublicMediaStorage"
 else:
     STATIC_URL = "/staticfiles/"
