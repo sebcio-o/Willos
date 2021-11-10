@@ -13,14 +13,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .helpers import GetSerializerBasedOnAuthType
 from .models import CustomUser
-from .serializers import (
-    EmailRegisterUserSerializer,
-    EmailTokenObtainPairSerializer,
-    EmailTwoFATokenObtainPairSerializer,
-    SocialsRegisterUserSerializer,
-    SocialsTokenObtainPairSerializer,
-    SocialsTwoFATokenObtainPairSerializer,
-)
+from .serializers import (EmailRegisterUserSerializer,
+                          EmailTokenObtainPairSerializer,
+                          EmailTwoFATokenObtainPairSerializer,
+                          SocialsRegisterUserSerializer,
+                          SocialsTokenObtainPairSerializer,
+                          SocialsTwoFATokenObtainPairSerializer)
 from .tasks import send_verification_mail
 from .utils import Token
 

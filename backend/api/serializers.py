@@ -1,9 +1,8 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ParseError
 
 from .models import Property
 from .validators import is_property_in_image
-
-from rest_framework.exceptions import ParseError
 
 
 class PropertySerializer(serializers.ModelSerializer):

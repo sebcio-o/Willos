@@ -1,4 +1,5 @@
 import requests
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -8,7 +9,6 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.exceptions import ParseError
 from rest_framework.response import Response
-from django.contrib.auth.decorators import login_required
 
 from .models import Property
 from .serializers import PropertySerializer
