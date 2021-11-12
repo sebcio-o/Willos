@@ -1,13 +1,15 @@
+import os
+
 import pyotp
 import pytest
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.urls import reverse
 
-from model_bakery import baker
+from users.models import CustomUser
 
 from ..utils import Token
 
@@ -16,186 +18,140 @@ from ..utils import Token
 class TestPropertyView:
     def setup(self):
         self.client = APIClient()
-        self.user_model = get_user_model()
 
-    def test_registration_email(self):
-        response = self.client.post(
-            "http://localhost:8000/api/users/",
-            {
-                "auth_type": "email",
-                "username": "zbychu",
-                "email": "testq@gmail.com",
-                "first_name": "Sebcio",
-                "last_name": "Ozi",
-                "date_of_birth": "2012-09-04 00:00",
-                "is_industry_professional": True,
-                "password": "MoiDrodzyRekturerzy123",
-            },
-            format="json",
-        )
+    def test_register_user_with_email(self, registration_data):
+        response = self.client.post(reverse("users"), registration_data, format="json")
         data = response.json()
         assert response.status_code == 201
         assert len(data) == 5
+        users = CustomUser.objects.filter(email=registration_data["email"])
+        assert users.count() == 1
 
-    def test_registration_facebook(self, fb_user_token):
+    def test_register_user_with_wrong_email(self, registration_data):
+        registration_data["email"] = "1232321"
+        response = self.client.post(reverse("users"), registration_data, format="json")
 
-        response = self.client.post(
-            "http://localhost:8000/api/users/",
-            {
-                "auth_type": "socials",
-                "username": "zbychu",
-                "email": "testq1@gmail.com",
-                "first_name": "Sebcio",
-                "last_name": "Ozi",
-                "date_of_birth": "2012-09-04 00:00",
-                "is_industry_professional": True,
-                "fb_token": fb_user_token,
-            },
-            format="json",
-        )
+        assert response.status_code == 400
+        user = CustomUser.objects.filter(email=registration_data["email"])
+        assert user.exists() is False
+
+    def test_register_user_with_facebook(self, registration_data):
+        registration_data["auth_type"] = "socials"
+        registration_data["fb_token"] = os.environ["FACEBOOK_TEST_USER_TOKEN"]
+        response = self.client.post(reverse("users"), registration_data, format="json")
         data = response.json()
-        print(data)
-        assert response.status_code == 201
+        assert response.status_code == 201, data["detail"]
         assert len(data) == 5
+        users = CustomUser.objects.filter(email=registration_data["email"])
+        assert users.count() == 1
 
-    def test_registraion_user_already_exist(self):
-        response = self.client.post(
-            "http://localhost:8000/api/users/",
-            {
-                "username": "zbychu",
-                "email": "test@gmail.com",
-                "first_name": "Sebcio",
-                "last_name": "Ozi",
-                "date_of_birth": "2012-09-04 00:00",
-                "is_industry_profesional": True,
-                "password": "MoiDrodzyRekturerzy123",
-            },
-            format="json",
-        )
+    def test_register_user_that_already_exist(self, registration_data, user):
+        response = self.client.post(reverse("users"), registration_data, format="json")
         data = response.json()
-
         assert response.status_code == 400
         assert len(data) == 1
+        assert "email" in data
 
-    def test_registraion_without_auth_type(self):
-
-        response = self.client.post(
-            "http://localhost:8000/api/users/",
-            {
-                "username": "zbychu",
-                "email": "test@gmail.com",
-                "first_name": "Sebcio",
-                "last_name": "Ozi",
-                "date_of_birth": "2012-09-04 00:00",
-                "is_industry_profesional": True,
-                "password": "MoiDrodzyRekturerzy123",
-            },
-            format="json",
-        )
+    def test_register_user_without_auth_type(self, registration_data):
+        registration_data["auth_type"] = ""
+        response = self.client.post(reverse("users"), registration_data, format="json")
         data = response.json()
-
         assert response.status_code == 400
-        assert len(data) == 1
+        assert data["detail"] == "Please provide auth_type", data["detail"]
 
-    def test_get_authenticated_user(self, user):
+    def test_get_authenticated_user_data(self, user):
 
         refresh = RefreshToken.for_user(user)
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
-        response = self.client.get("http://localhost:8000/api/users/", format="json")
+        response = self.client.get(reverse("users"), format="json")
         data = response.json()
 
         assert response.status_code == 200
         assert len(data) == 6
 
-    def test_get_tokens_with_email(self, user):
+    def test_get_tokens_with_email(self, user, registration_data):
 
         self.client.credentials(HTTP_USER_AGENT="Linux")
-        response = self.client.post(
-            "http://localhost:8000/api/users/token/",
+        data = self.client.post(
+            reverse("token_obtain_pair"), registration_data, format="json"
+        ).json()
+        assert len(data) == 2
+        assert "refresh" in data
+        assert "access" in data
+
+    def test_get_tokens_with_facebook(self, user):
+
+        self.client.credentials(HTTP_USER_AGENT="Linux")
+        data = self.client.post(
+            reverse("token_obtain_pair"),
             {
-                "auth_type": "email",
-                "email": "testq@gmail.com",
-                "password": "MoiDrodzyRekturerzy123",
+                "auth_type": "socials",
+                "fb_token": os.environ["FACEBOOK_TEST_USER_TOKEN"],
             },
             format="json",
-        )
-        assert len(response.data) == 2
+        ).json()
+        assert len(data) == 2
+        assert "refresh" in data
+        assert "access" in data
 
-    def test_get_tokens_with_facebook(self, fb_user, fb_user_token):
-
-        self.client.credentials(HTTP_USER_AGENT="Linux")
-        response = self.client.post(
-            "http://localhost:8000/api/users/token/",
-            {"auth_type": "socials", "fb_token": fb_user_token},
-            format="json",
-        )
-        assert len(response.data) == 2
-
-    def test_get_tokens_with_email_and_2fa(self, user):
+    def test_get_tokens_with_email_and_2fa_enabled(self, user, registration_data):
 
         user.is_email_verified = True
         user.is_2fa_enabled = True
         user.totp_secret = pyotp.random_base32()
         user.save()
 
-        body = {
-            "auth_type": "email",
-            "email": "testq@gmail.com",
-            "password": "MoiDrodzyRekturerzy123",
-        }
-
         self.client.credentials(HTTP_USER_AGENT="Linux")
         response = self.client.post(
-            "http://localhost:8000/api/users/token/", body, format="json"
+            reverse("token_obtain_pair"), registration_data, format="json"
         )
 
         assert response.data["detail"] == "Please check email for code"
 
-        body["code"] = pyotp.TOTP(
+        registration_data["code"] = pyotp.TOTP(
             user.totp_secret, interval=settings.TOTP_INTERVAL
         ).now()
-        response = self.client.post(
-            "http://localhost:8000/api/users/token/code/", body, format="json"
-        )
+        data = self.client.post(
+            reverse("code_token_obtain_pair"), registration_data, format="json"
+        ).json()
 
-        assert len(response.data) == 2
+        assert len(data) == 2
+        assert "refresh" in data
+        assert "access" in data
 
-    def test_get_tokens_with_fb_and_2fa(self, fb_user, fb_user_token):
+    def test_get_tokens_with_fb_and_2fa_enabled(self, user, registration_data):
 
-        fb_user.is_email_verified = True
-        fb_user.is_2fa_enabled = True
-        fb_user.totp_secret = pyotp.random_base32()
-        fb_user.save()
+        user.is_email_verified = True
+        user.is_2fa_enabled = True
+        user.totp_secret = pyotp.random_base32()
+        user.save()
 
-        body = {
-            "auth_type": "socials",
-            "email": "testq@gmail.com",
-            "fb_token": fb_user_token,
-        }
+        registration_data["auth_type"] = "socials"
+        registration_data["fb_token"] = os.environ["FACEBOOK_TEST_USER_TOKEN"]
 
         self.client.credentials(HTTP_USER_AGENT="Linux")
         response = self.client.post(
-            "http://localhost:8000/api/users/token/", body, format="json"
+            reverse("token_obtain_pair"), registration_data, format="json"
         )
 
         assert response.data["detail"] == "Please check email for code"
 
-        body["code"] = pyotp.TOTP(
-            fb_user.totp_secret, interval=settings.TOTP_INTERVAL
+        registration_data["code"] = pyotp.TOTP(
+            user.totp_secret, interval=settings.TOTP_INTERVAL
         ).now()
-        response = self.client.post(
-            "http://localhost:8000/api/users/token/code/", body, format="json"
-        )
-        assert len(response.data) == 2
+        data = self.client.post(
+            reverse("code_token_obtain_pair"), registration_data, format="json"
+        ).json()
+        assert len(data) == 2
+        assert "refresh" in data
+        assert "access" in data
 
     def test_enable_2fa(self, user):
 
         refresh = RefreshToken.for_user(user)
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
         response = self.client.put(
-            "http://localhost:8000/api/users/2fa/",
-            {"is_2fa_enabled": True},
-            format="json",
+            reverse("2fa"), {"is_2fa_enabled": True}, format="json"
         )
 
         assert response.json() == {"detail": "Please verify email first"}
@@ -204,33 +160,30 @@ class TestPropertyView:
         user.save()
 
         response = self.client.put(
-            "http://localhost:8000/api/users/2fa/",
-            {"is_2fa_enabled": True},
-            format="json",
+            reverse("2fa"), {"is_2fa_enabled": True}, format="json"
         )
         assert response.status_code == 200
+        user.refresh_from_db()
+        assert user.is_2fa_enabled is True
 
-    def test_email(self, user):
+    def test_email_verification(self, user, registration_data):
 
-        response = self.client.get(
-            "http://localhost:8000/api/users/email/",
-            {"email": "testq@gmail.com"},
-            format="json",
-        )
+        response = self.client.get(reverse("email"), registration_data, format="json")
 
         assert response.status_code == 200
 
         response = self.client.post(
-            "http://localhost:8000/api/users/email/verify/",
-            {"email": "testq@gmail.com"},
-            format="json",
+            reverse("send_verification_mail"), registration_data, format="json"
         )
         assert response.status_code == 200
 
-        uid = (urlsafe_base64_encode(force_bytes(user.id)),)
+        user = CustomUser.objects.get(email=registration_data["email"])
+        uid = urlsafe_base64_encode(force_bytes(user.id))
         token = Token.make_token(user)
+
         response = self.client.get(
-            f"http://localhost:8000/api/users/email/verify/{uid}/{token}/",
-            format="json",
+            reverse("verify_email", args=(uid, token)), format="json"
         )
+
         assert response.status_code == 200
+        assert user.is_active is True

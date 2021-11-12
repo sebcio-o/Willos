@@ -12,7 +12,7 @@ ALLOWED_HOSTS = [
     host.strip() for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host
 ]
 
-DOMAIN = "Willos"
+BASE_URL = "http://localhost:8000"
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -67,11 +67,11 @@ DATABASES = {
         "ENGINE": os.environ.get(
             "POSTGRES_ENGINE", "django.contrib.gis.db.backends.postgis"
         ),
-        "NAME": os.environ.get("POSTGRES_DB"),
-        "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
-        "HOST": os.environ.get("POSTGRES_HOST"),
-        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        "NAME": os.environ["POSTGRES_DB"],
+        "USER": os.environ["POSTGRES_USER"],
+        "PASSWORD": os.environ["POSTGRES_PASSWORD"],
+        "HOST": os.environ["POSTGRES_HOST"],
+        "PORT": os.environ["POSTGRES_PORT"],
     }
 }
 
@@ -93,18 +93,16 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Europe/London"
 
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
-RABBITMQ_DEFAULT_USER = os.environ.get("RABBITMQ_DEFAULT_USER")
-RABBITMQ_DEFAULT_PASS = os.environ.get("RABBITMQ_DEFAULT_PASS")
+REDIS_HOST = os.environ["REDIS_HOST"]
+REDIS_DATABASE = os.environ["REDIS_DATABASE"]
+REDIS_PORT = os.environ["REDIS_PORT"]
 
 CELERY_TIMEZONE = "Europe/London"
-CELERY_BROKER_URL = (
-    f"amqp://{RABBITMQ_DEFAULT_USER}:{RABBITMQ_DEFAULT_PASS}@rabbitmq:5672"
-)
+CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DATABASE}"
+TEST_RUNNER = "djcelery.contrib.test_runner.CeleryTestSuiteRunner"
 
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
@@ -137,7 +135,7 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(days=99)}
 CORS_ORIGIN_ALLOW_ALL = True
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 TOTP_INTERVAL = 120
 

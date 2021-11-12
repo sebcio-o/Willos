@@ -1,5 +1,5 @@
 {% autoescape off %}
-Hi {{user.first_name}},
-Please click on the link to confirm your registration,
-http://{{ domain }}{% url 'verify_email' uid=uid token=token %}
-{% endautoescape %}
+<h1>Hi {{user.first_name}}</h1>
+<p>Please click on the link to confirm your registration</p>
+<br />
+{{ url }}{% url 'verify_email' uid=uid token=token %} {% endautoescape %}
