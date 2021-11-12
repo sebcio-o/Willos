@@ -15,7 +15,6 @@ from .utils import Token
 @shared_task
 def send_verification_mail(id):
     user = CustomUser.objects.get(id=id)
-    print("adsada")
     message = render_to_string(
         "email_verification.html",
         {
