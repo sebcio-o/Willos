@@ -13,7 +13,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path("", UserView.as_view(), name="user"),
+    path("", UserView.as_view(), name="users"),
     path("token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path(
         "token/code/",

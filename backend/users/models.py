@@ -1,17 +1,17 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import EmailValidator
+from django.core.validators import EmailValidator, MinLengthValidator
 from django.db import models
 from django.db.models.deletion import CASCADE
-from django.utils.translation import gettext_lazy as _
 from pyotp import random_base32
 
 from api.models import RealEstateAgent
 
 
 class CustomUser(AbstractUser):
-    username = models.CharField(max_length=150, null=True, blank=True)
+    username = models.CharField(
+        max_length=150, validators=[MinLengthValidator(6)], blank=True
+    )
     email = models.EmailField(validators=[EmailValidator], unique=True)
-    avatar = models.ImageField("/", null=True, blank=True)
     date_of_birth = models.DateTimeField(null=True, blank=True)
     real_estate_agency = models.ForeignKey(
         RealEstateAgent, null=True, blank=True, on_delete=CASCADE

@@ -13,7 +13,7 @@ services:
       - .env
     depends_on:
       - db
-      - rabbitmq
+      - redis
   celery:
     build: backend
     container_name: willos_celery
@@ -25,12 +25,12 @@ services:
       - .env
     depends_on:
       - backend
-      - rabbitmq
-  rabbitmq:
-    container_name: willos_mq
-    image: "rabbitmq:3.8-alpine"
+      - redis
+  redis:
+    container_name: willos_redis
+    image: "redis:6.2.6-alpine"
     ports:
-      - 5672:5672
+      - 6379:6379
     env_file:
       - .env
   db:

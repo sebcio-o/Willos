@@ -9,10 +9,7 @@ def is_property_in_image(img):
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         region_name=settings.AWS_REGION_NAME,
     )
-    response = client.detect_labels(
-        Image={"Bytes": img.file.read()},
-        MaxLabels=10,
-    )
+    response = client.detect_labels(Image={"Bytes": img.file.read()}, MaxLabels=10)
     has_property = any(
         [label.get("Name") == "Building" for label in response.get("Labels", {})]
     )

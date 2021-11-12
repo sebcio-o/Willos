@@ -11,9 +11,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .helpers import GetSerializerBasedOnAuthType
 from .models import CustomUser
 from .serializers import (
+    GetSerializerBasedOnAuthType,
     EmailRegisterUserSerializer,
     EmailTokenObtainPairSerializer,
     EmailTwoFATokenObtainPairSerializer,
@@ -294,7 +294,7 @@ class SendVerificationMailView(APIView):
                 {"detail": "Email isn't supplied"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        send_verification_mail(user.id)
+        send_verification_mail.delay(user.id)
         return Response(status=status.HTTP_200_OK)
 
 
