@@ -6,16 +6,6 @@ repos:
         name: isort (python)
         args: ["--profile", "black"]
         stages: [commit]
-      - id: isort
-        name: isort (cython)
-        args: ["--profile", "black"]
-        types: [cython]
-        stages: [commit]
-      - id: isort
-        name: isort (pyi)
-        args: ["--profile", "black"]
-        types: [pyi]
-        stages: [commit]
   - repo: https://github.com/ambv/black
     rev: 21.4b2
     hooks:
@@ -26,8 +16,5 @@ repos:
     rev: 3.9.1
     hooks:
       - id: flake8
+        entry: flake8 --max-line-length=127
         stages: [commit]
-  - repo: https://github.com/pycqa/bandit
-    rev: 1.7.0
-    hooks:
-      - id: bandit
