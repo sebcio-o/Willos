@@ -1,8 +1,8 @@
 import pytest
-from django.test import Client
 import requests
-from model_bakery import baker
 from django.contrib.gis.geos import Point
+from django.test import Client
+from model_bakery import baker
 
 
 @pytest.fixture

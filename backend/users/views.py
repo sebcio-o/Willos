@@ -13,10 +13,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import CustomUser
 from .serializers import (
-    GetSerializerBasedOnAuthType,
     EmailRegisterUserSerializer,
     EmailTokenObtainPairSerializer,
     EmailTwoFATokenObtainPairSerializer,
+    GetSerializerBasedOnAuthType,
     SocialsRegisterUserSerializer,
     SocialsTokenObtainPairSerializer,
     SocialsTwoFATokenObtainPairSerializer,
