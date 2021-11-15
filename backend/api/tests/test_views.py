@@ -1,5 +1,4 @@
 import pytest
-import requests
 from django.contrib.gis.geos import Point
 from django.urls import reverse
 from django.utils import timezone
@@ -8,14 +7,7 @@ from model_bakery import baker
 
 @pytest.mark.django_db
 class TestPropertyView:
-    def test_search_by_address(self, client):
-        data = requests.get(
-            "https://nominatim.openstreetmap.org/search?q=London"
-            "&format=json&country=United Kingdom&polygon_geojson=1&limit=1"
-        ).json()[0]
-        baker.make(
-            "api.Property", cordinates=Point(float(data["lon"]), float(data["lat"]))
-        )
+    def test_search_by_address(self, client, property):
         response = client.get(reverse("properties-list"), {"address": "London"})
         assert response.status_code == 200
         assert len(response.data["properties"]) == 1

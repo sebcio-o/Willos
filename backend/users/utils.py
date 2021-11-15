@@ -26,9 +26,8 @@ def get_fb_user_id(token):
     ).json()
     data = r.get("data")
 
-    if error := r.get("error") or data.get("error"):
+    if (error := r.get("error")) or data.get("error"):
         raise ParseError(error["message"])
-
     if data["is_valid"] and data["type"] == "USER":
         return data.get("user_id")
     return

@@ -1,10 +1,13 @@
 import os
+import sentry_sdk
+
 from datetime import timedelta
 from pathlib import Path
+from sentry_sdk.integrations.django import DjangoIntegration
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = "rk*j8$(^1@11xe01@5*8d4gu8#a8s$@w**$s&iwdz$st1lb+&n"
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
 DEBUG = bool(os.environ.get("DEBUG", False))
 
@@ -111,19 +114,13 @@ AWS_REGION_NAME = os.environ.get("AWS_REGION_NAME")
 AWS_S3_OBJECT_PARAMETERS = {"ACL": "public-read", "CacheControl": "max-age=86400"}
 AWS_QUERYSTRING_AUTH = False
 
-if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_REGION_NAME:
-    STATIC_LOCATION = "static"
-    STATIC_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION_NAME}.amazonaws.com/{STATIC_LOCATION}/"
-    STATICFILES_STORAGE = "backend.storage_backends.StaticStorage"
+STATIC_LOCATION = "static"
+STATIC_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION_NAME}.amazonaws.com/{STATIC_LOCATION}/"
+STATICFILES_STORAGE = "backend.storage_backends.StaticStorage"
 
-    PUBLIC_MEDIA_LOCATION = "media"
-    MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION_NAME}.amazonaws.com/{PUBLIC_MEDIA_LOCATION}/"
-    DEFAULT_FILE_STORAGE = "backend.storage_backends.PublicMediaStorage"
-else:
-    STATIC_URL = "/staticfiles/"
-    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-    MEDIA_URL = "/mediafiles/"
-    MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
+PUBLIC_MEDIA_LOCATION = "media"
+MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION_NAME}.amazonaws.com/{PUBLIC_MEDIA_LOCATION}/"
+DEFAULT_FILE_STORAGE = "backend.storage_backends.PublicMediaStorage"
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
 
@@ -132,13 +129,24 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication"
     ]
 }
-SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(days=99)}
-CORS_ORIGIN_ALLOW_ALL = True
+if DEBUG:
+    SIMPLE_JWT = {"ACCESS_TOKEN_LIFETIME": timedelta(days=99)}
+    CORS_ORIGIN_ALLOW_ALL = True
+else:
+    CORS_ALLOWED_ORIGINS = ALLOWED_HOSTS
+
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 TOTP_INTERVAL = 120
 
-FACEBOOK_ACCESS_TOKEN = os.environ.get("FACEBOOK_ACCESS_TOKEN")
+FACEBOOK_ACCESS_TOKEN = os.environ["FACEBOOK_ACCESS_TOKEN"]
 
 AUTH_USER_MODEL = "users.CustomUser"
+
+sentry_sdk.init(
+    dsn=os.environ.get("SENTRY_DSN", ""),
+    integrations=[DjangoIntegration()],
+    traces_sample_rate=1.0,
+    send_default_pii=True,
+)

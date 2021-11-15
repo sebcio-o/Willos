@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+redis = "*"
+django = "*"
+django-rest-framework = "*"
+django-storages = "*"
+celery = "*"
+pytest = "*"
+drf-yasg = "*"
+model-bakery = "*"
+pillow = "*"
+psycopg2-binary = "*"
+pytest-django = "*"
+pyotp = "*"
+user-agents = "*"
+ua-parser = "*"
+sentry-sdk = "*"
+requests = "*"
+djangorestframework-simplejwt = "*"
+django-cors-headers = "*"
+boto3 = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.8"
